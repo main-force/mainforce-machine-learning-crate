@@ -22,5 +22,9 @@ There are many reasons why I make this.
 
 Create machine learning crates for use by **'Me'**, not others.
 
-# CrateName
-mf_machine_learning
+# If you want to use firmly..
+crate name: mf_machine_learning
+
+I didn't upload this crate at crate.io.
+So you have to use 'git clone' or download files associated with crates.
+If I think it's okay for someone else to use this crate, I'll update it to crate.io then.
