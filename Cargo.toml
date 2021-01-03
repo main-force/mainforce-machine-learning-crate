@@ -1,0 +1,8 @@
+[package]
+name = "mf_machine_learning"
+version = "0.1.0"
+authors = ["mainforce"]
+edition = "2018"
+
+[dependencies]
+ndarray = "0.14.0"
