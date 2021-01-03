@@ -21,3 +21,6 @@ There are many reasons why I make this.
 # Goals
 
 Create machine learning crates for use by **'Me'**, not others.
+
+# CrateName
+mf_machine_learning
