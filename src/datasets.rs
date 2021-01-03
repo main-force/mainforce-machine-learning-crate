@@ -1,9 +1,12 @@
 use std::fs::File;
 use std::io::{BufReader, BufRead};
+use ndarray::Array2;
+use num_traits;
 
 pub struct DataFrame {
     header: Vec<String>,
     data: Vec<Vec<String>>,
+	shape: (usize, usize),
 }
 
 impl DataFrame {
@@ -11,8 +14,11 @@ impl DataFrame {
         DataFrame {
             header: Vec::new(),
             data: Vec::new(),
+			shape: (0, 0),
         }
     }
+
+	pub fn get_data(&self) -> &Vec<Vec<String>> { &self.data }
 
     pub fn csv_to_dataframe(&mut self, path: &str) {
         let file = File::open(path).expect("file not found");
@@ -23,14 +29,15 @@ impl DataFrame {
 			Ok(_) => {}, //Nothing to do
 			Err(error) => println!("error: {}", error),
 		}
-
-		let header = match line.lines().next() {
-			Some(result) => result.to_string(),
-			None => panic!("Nothing to read"),
-		};
-
-		self.header = split_comma(&header);
 		
+		{
+			let header = match line.lines().next() {
+				Some(result) => result.to_string(),
+				None => panic!("Nothing to read"),
+			};
+
+			self.header = split_comma(&header);
+		}
 
         let mut rows_string = Vec::new();
         
@@ -43,21 +50,29 @@ impl DataFrame {
             };
             rows_string.push(row);
         }
-        
+
+		self.shape = (self.header.len() as usize, rows_string.len() as usize);
+
         for row_string in rows_string.iter() {
             println!("low_string: {}", row_string);
 			let row_value = split_comma(row_string);
             self.data.push(row_value);
         }
     }
+
+	//first, I'll do index [0, 1, 2, 9] = Pclass Fair["PassengerId", "Survived", "Pclass", "Fare"]
+	pub fn load_dataset<T>(&self) -> Array2<T>
+		where T: Clone + num_traits::identities::Zero
+	{
+		let mut arr = ndarray::Array2::zeros(self.shape);
+		arr
+	}
 }
 
 //let dataset_x = df_x.load_dataset();
 //return ndarray. default is all. you can enter load_dataset("some key1", "some key3").
 //let dataset_y = df_y.load_dataset(); //return ndarray
     
-
-
 fn split_comma(string: &str) -> Vec<String>{
     let mut slice_vec = Vec::new();
 	let string_len = string.len();
@@ -80,7 +95,7 @@ fn split_comma(string: &str) -> Vec<String>{
 			check_quote = (check_quote + 1) % 2;
 		}
 	}
-	let value = string[prev_index..((string_len - 1) as usize)].to_string(); 
+	let value = string[prev_index..((string_len) as usize)].to_string(); 
 	slice_vec.push(value);
 	println!("{}", slice_vec.len());
 	slice_vec
