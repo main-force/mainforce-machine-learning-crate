@@ -28,19 +28,24 @@ impl DataFrame {
 			shape: (0, 0),
         }
     }
-
+	
+	//Return Data
 	pub fn get_data(&self) -> &Vec<Vec<String>> { &self.data }
 
+	//Return DataFrame from csv.
     pub fn csv_to_dataframe(&mut self, path: &str) {
         let file = File::open(path).expect("file not found");
+
         let mut bufread = BufReader::new(file);    
         let mut line = String::new();
 		
+		//Read header line.
 		match bufread.read_line(&mut line) {
 			Ok(_) => {()}, //Nothing to do
 			Err(error) => println!("error: {}", error),
 		}
 		
+		//Set the dataframe.columns with header and index.
 		{
 			let header = match line.lines().next() {
 				Some(result) => result.to_string(),
@@ -54,9 +59,10 @@ impl DataFrame {
 				index += 1;
 			}
 		}
-
+		
         let mut rows_string = Vec::new();
         
+		//Insert the rows in vec as string each other.
 		for line in bufread.lines() {
             let row = match line {
                 Ok(values_string) => values_string,
@@ -66,7 +72,9 @@ impl DataFrame {
             };
             rows_string.push(row);
         }
+		
 
+		//Split the value from row_string, and set the dataframe.data
 		self.shape = (rows_string.len() as usize, self.columns.len() as usize);
 		println!("shape: {:?}", self.shape);
         for row_string in rows_string.iter() {
@@ -75,18 +83,14 @@ impl DataFrame {
             self.data.push(row_value);
         }
 
-		//You have to infer type now.
     }
 	
-	//first, I'll do index [0, 1, 2, 9] = ["PassengerId", "Survived", "Pclass", "Fare"]
-	//load_dataset_as_F64
-	//load_dataset_as_I32
 	pub fn load_dataset_as_i32(&self, columns: &[&str]) -> Array2<i32> {
 		let columns_index = find_column_index(&self.columns, columns);
 		
 		let row_num = self.shape.0;
 				
-		//Start type checking and return Type...
+		//Start type checking and push the value in 1-dimension vector.
 		let mut tmp = Vec::new();
 		let type_check = infer_type(&self.data[0][0]);
 		for row in 0..row_num {
@@ -98,7 +102,9 @@ impl DataFrame {
 				tmp.push(&self.data[row as usize][column]);
 			}
 		}
-		//End type checking and Return Type...
+		//End type checking.
+		
+		//Make dataset of i32.
 		let arr_shape = (row_num as usize, columns.len() as usize);
 		let dataset = match type_check {
 			Type::Int => {
@@ -120,7 +126,7 @@ impl DataFrame {
 		
 		let row_num = self.shape.0;
 				
-		//Start type checking and return Type...
+		//Start type checking.
 		let mut tmp = Vec::new();
 		let type_check = match infer_type(&self.data[0][0]) {
 			Type::Int => { Type::Float },
@@ -128,7 +134,8 @@ impl DataFrame {
 			_ => { panic!("Can't parse F64") },
 
 		};
-
+		
+		//Start type checking and push the value in 1-dimension vector.
 		for row in 0..row_num {
 			for &column in &columns_index {
 				let type_infer = infer_type(&self.data[row as usize][column]);
@@ -139,8 +146,9 @@ impl DataFrame {
 				}
 			}
 		}
-
-		//End type checking and Return Type...
+		//End type checking.
+		
+		//Make dataset of f64.
 		let arr_shape = (row_num as usize, columns.len() as usize);
 		let dataset = match type_check {
 			Type::Float => {
@@ -158,9 +166,6 @@ impl DataFrame {
 		dataset
 		}
 	}
-//let dataset_x = df_x.load_dataset();
-//return ndarray. default is all. you can enter load_dataset("some key1", "some key3").
-//let dataset_y = df_y.load_dataset(); //return ndarray
     
 fn split_comma(string: &str) -> Vec<String>{
     let mut slice_vec = Vec::new();
