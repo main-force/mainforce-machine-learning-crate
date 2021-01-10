@@ -3,6 +3,9 @@ use std::io::{BufReader, BufRead};
 use std::collections::HashMap;
 use ndarray::{Array, Array2};
 use std::fmt::Debug;
+use rand::{SeedableRng};
+use rand::rngs::StdRng;
+use rand::seq::SliceRandom;
 
 #[derive(PartialEq)]
 #[derive(Debug)]
@@ -14,6 +17,7 @@ enum Type {
 	Str,
 }
 
+#[derive(Debug)]
 pub struct DataFrame {
     columns: HashMap<String, usize>,
     data: Vec<Vec<String>>,
@@ -28,10 +32,42 @@ impl DataFrame {
 			shape: (0, 0),
         }
     }
-	
-	//Return Data
-	pub fn get_data(&self) -> &Vec<Vec<String>> { &self.data }
 
+	pub fn from_vec(vec: Vec<Vec<String>>, header: &Vec<String>) -> DataFrame {
+		let mut columns = HashMap::new();
+
+		let mut index: usize = 0;
+		for column in header {
+			columns.insert(column.to_string(), index);
+			index += 1;
+		}
+
+		let shape = (vec.len() as usize, vec[0].len() as usize);
+
+		DataFrame {
+			columns: columns,
+			data: vec,
+			shape: shape,
+		}
+	}
+
+//-------------------------------------------------------------------------
+
+	fn get_header(&self) -> Vec<String> {
+		let mut header = Vec::new();
+		for key in self.columns.keys() {
+			header.push(key.to_string());
+		}
+
+		header
+		
+	}
+
+
+	//Return Data
+	fn get_data(&self) -> &Vec<Vec<String>> { &self.data }
+	
+	
 	//Return DataFrame from csv.
     pub fn csv_to_dataframe(&mut self, path: &str) {
         let file = File::open(path).expect("file not found");
@@ -83,7 +119,7 @@ impl DataFrame {
             self.data.push(row_value);
         }
 
-    }
+    }	
 	
 	pub fn load_dataset_as_i32(&self, columns: &[&str]) -> Array2<i32> {
 		let columns_index = find_column_index(&self.columns, columns);
@@ -232,3 +268,45 @@ fn find_column_index(columns: &HashMap<String, usize>, target: &[&str]) -> Vec<u
 	}
 	columns_index
 }
+
+pub fn train_test_split(x: &DataFrame, y: &DataFrame, test_size: f32, random_state: u64) -> (DataFrame, DataFrame, DataFrame, DataFrame) { 
+	let row_num = x.shape.0;
+	let mut test_indexes: Vec<usize>= vec![0; row_num];
+	for i in 0..row_num {
+		test_indexes[i] += i;
+		println!("{}", test_indexes[i]);
+	}
+	
+	let split_num = (row_num as f32 * test_size).round() as usize;
+	
+	let mut rng = StdRng::seed_from_u64(random_state);
+	
+	test_indexes.shuffle(&mut rng);
+	
+	test_indexes.drain(split_num..);
+
+	test_indexes.sort();
+	test_indexes.reverse();
+
+	let mut train_x_data = x.data.clone();
+	let mut train_y_data = y.data.clone();
+	let mut test_x_data = Vec::new();
+	let mut test_y_data = Vec::new();
+
+
+	for index in test_indexes {
+		test_x_data.push(train_x_data.remove(index));
+		test_y_data.push(train_y_data.remove(index));
+	}
+
+	let x_header = x.get_header();
+	let y_header = y.get_header();
+
+	( DataFrame::from_vec(train_x_data, &x_header),
+	  DataFrame::from_vec(test_x_data, &x_header),
+	  DataFrame::from_vec(train_y_data, &y_header),
+	  DataFrame::from_vec(test_y_data, &y_header),
+	  )
+}
+
+
