@@ -1,5 +1,5 @@
 pub mod datasets;
-mod models;
+pub mod models;
 
 
 #[cfg(test)]

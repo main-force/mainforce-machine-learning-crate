@@ -19,7 +19,7 @@ enum Type {
 
 #[derive(Debug)]
 pub struct DataFrame {
-    columns: HashMap<String, usize>,
+    columns: HashMap<usize, String>,
     data: Vec<Vec<String>>,
 	shape: (usize, usize),
 }
@@ -38,7 +38,7 @@ impl DataFrame {
 
 		let mut index: usize = 0;
 		for column in header {
-			columns.insert(column.to_string(), index);
+			columns.insert(index, column.to_string());
 			index += 1;
 		}
 
@@ -52,22 +52,27 @@ impl DataFrame {
 	}
 
 //-------------------------------------------------------------------------
-
+	
+	//You have to sort the keys with value = index.
 	fn get_header(&self) -> Vec<String> {
 		let mut header = Vec::new();
-		for key in self.columns.keys() {
-			header.push(key.to_string());
+		for index in 0..self.columns.len() {
+			header.push(self.columns.get(&index).unwrap().to_string());
 		}
 
 		header
 		
 	}
 
+//-------------------
+//-------------------
+//-----------------Fix Up this
 
 	//Return Data
 	fn get_data(&self) -> &Vec<Vec<String>> { &self.data }
 	
-	
+	pub fn shape(&self) -> (usize, usize) { self.shape }
+
 	//Return DataFrame from csv.
     pub fn csv_to_dataframe(&mut self, path: &str) {
         let file = File::open(path).expect("file not found");
@@ -91,7 +96,7 @@ impl DataFrame {
 			let header = split_comma(&header);
 			let mut index: usize = 0;
 			for column in header {
-				self.columns.insert(column, index);
+				self.columns.insert(index, column);
 				index += 1;
 			}
 		}
@@ -112,9 +117,7 @@ impl DataFrame {
 
 		//Split the value from row_string, and set the dataframe.data
 		self.shape = (rows_string.len() as usize, self.columns.len() as usize);
-		println!("shape: {:?}", self.shape);
         for row_string in rows_string.iter() {
-            println!("low_string: {}", row_string);
 			let row_value = split_comma(row_string);
             self.data.push(row_value);
         }
@@ -258,12 +261,20 @@ fn infer_type(value: &str) -> Type
 	}
 }
 
-fn find_column_index(columns: &HashMap<String, usize>, target: &[&str]) -> Vec<usize> {
+fn find_column_index(columns: &HashMap<usize, String>, target: &[&str]) -> Vec<usize> {
 	let mut columns_index = Vec::new();
+	let mut isfind = 0 as usize;
 	for column in target {
-		match columns.get(&column.to_string()) {
-			Some(value) => { columns_index.push(*value); },
-			None => { panic!("The dataframe doesn't have the key: {}", column); },
+		isfind = 0;
+		for (index, value) in columns {
+			if value == column {
+				columns_index.push(*index);
+				isfind = 1;
+				break;
+			}
+		}
+		if isfind == 0 {
+		panic!("The dataframe doesn't have the key: {}", column); 
 		}
 	}
 	columns_index
@@ -274,7 +285,6 @@ pub fn train_test_split(x: &DataFrame, y: &DataFrame, test_size: f32, random_sta
 	let mut test_indexes: Vec<usize>= vec![0; row_num];
 	for i in 0..row_num {
 		test_indexes[i] += i;
-		println!("{}", test_indexes[i]);
 	}
 	
 	let split_num = (row_num as f32 * test_size).round() as usize;
@@ -287,6 +297,7 @@ pub fn train_test_split(x: &DataFrame, y: &DataFrame, test_size: f32, random_sta
 
 	test_indexes.sort();
 	test_indexes.reverse();
+	
 
 	let mut train_x_data = x.data.clone();
 	let mut train_y_data = y.data.clone();
@@ -300,7 +311,9 @@ pub fn train_test_split(x: &DataFrame, y: &DataFrame, test_size: f32, random_sta
 	}
 
 	let x_header = x.get_header();
+	println!("x_header: {:?}", x_header);
 	let y_header = y.get_header();
+	println!("y_header: {:?}", y_header);
 
 	( DataFrame::from_vec(train_x_data, &x_header),
 	  DataFrame::from_vec(test_x_data, &x_header),
