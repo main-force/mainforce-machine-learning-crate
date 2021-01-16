@@ -18,20 +18,16 @@ use ndarray;
 
 #[derive(Debug)]
 pub struct LogisticRegression{
-	x_train: Option<Array2<f64>>,
-	y_train: Option<Array2<f64>>,
 	bias: Option<Array2<f64>>,
 	weight: Option<Array2<f64>>,
 	learning_rate: Option<f64>,
 	iter: Option<usize>,
-	costs: Option<Vec<f32>>,
+	costs: Option<Vec<f64>>,
 }
 
 impl LogisticRegression {
 	pub fn new() -> LogisticRegression{
 		LogisticRegression {
-			x_train: None,
-			y_train: None,
 			bias: None,
 			weight: None,
 			learning_rate: None,
@@ -40,21 +36,21 @@ impl LogisticRegression {
 		}
 	}
 
-	pub fn feed(&mut self, x: Array2<f64>, y: Array2<f64>) {
-		self.x_train = Some(x);
-		self.y_train = Some(y);
-	}
 
-	pub fn train(&mut self, mut w: Array2<f64>, mut bias: Array2<f64>, learning_rate: f64, iter: usize) {
-		let x = self.x_train.as_ref().clone().unwrap();
-		let y = self.y_train.as_ref().clone().unwrap();
+	pub fn train(&mut self, x: &Array2<f64>, y: &Array2<f64>, mut w: Array2<f64>, mut bias: Array2<f64>, learning_rate: f64, iter: usize) {
 		let m = x.shape()[0];
-		let mut cost = Vec::<f32>::new();
+		let mut costs = Vec::<f64>::new();
 	
 		for _ in 0..iter {
 			let z = x.dot(&w) + &bias;
 			println!("z : {:?}", z);
 			let y_hat = sigmoid_f64(&z);
+			let cost = compute_cost(y, &y_hat);
+			println!("cost: {:?}", cost);
+			if !cost.is_nan() {
+				costs.push(cost);
+			}
+
 			println!("y_hat: {}",y_hat);
 			let dz = y_hat - y;
 			let dw = x.t().dot(&dz) / (m as f64);
@@ -70,10 +66,24 @@ impl LogisticRegression {
 		self.weight = Some(w);
 		self.learning_rate = Some(learning_rate);
 		self.iter = Some(iter);
+		self.costs = Some(costs);
+	}
+
+	pub fn info(&self) {
+		println!("{:#?}", self);
 	}
 }
 
 fn sigmoid_f64(target: &Array2<f64>) -> Array2<f64>{
 	let result = target.mapv(|target| (1.0 / (1.0 + (-target).exp())));
 	result
+}
+
+fn compute_cost(y: &Array2<f64>, a: &Array2<f64>) -> f64{
+	let ln_a = a.mapv(|a| (a.ln()));
+	let tmp = 1.0 - a;
+	println!("tmp: {:?}", tmp);
+	let ln_1_minus_a = tmp.mapv(|tmp| (tmp.ln()));
+
+	(-((ln_a * y) + (ln_1_minus_a * (1.0 - y)))).sum()
 }
