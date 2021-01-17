@@ -30,3 +30,8 @@ I didn't upload this crate at crate.io.
 So you have to use 'git clone' or download files associated with crates.
 
 If I think it's okay for someone else to use this crate, I'll update it to crate.io then.
+
+# Recently Comment
+First version is updated.
+
+So, I'll upgrade this codes more pretty, more efficient on the Rust side.
