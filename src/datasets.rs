@@ -123,8 +123,10 @@ impl DataFrame {
         }
 
     }	
-	
-	pub fn load_dataset_as_i32(&self, columns: &[&str]) -> Array2<i32> {
+
+
+// I think, I'll do not use this code.
+/*	pub fn load_dataset_as_i32(&self, columns: &[&str]) -> Array2<i32> {
 		let columns_index = find_column_index(&self.columns, columns);
 		
 		let row_num = self.shape.0;
@@ -159,7 +161,8 @@ impl DataFrame {
 		};
 		dataset
 	}
-	
+*/
+
 	pub fn load_dataset_as_f64(&self, columns: &[&str]) -> Array2<f64> {
 		let columns_index = find_column_index(&self.columns, columns);
 		
