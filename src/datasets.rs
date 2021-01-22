@@ -266,7 +266,7 @@ fn infer_type(value: &str) -> Type
 
 fn find_column_index(columns: &HashMap<usize, String>, target: &[&str]) -> Vec<usize> {
 	let mut columns_index = Vec::new();
-	let mut isfind = 0 as usize;
+	let mut isfind: usize;
 	for column in target {
 		isfind = 0;
 		for (index, value) in columns {
