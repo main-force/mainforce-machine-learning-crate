@@ -1,3 +1,23 @@
+***
+***
+***
+
+# Project Closed
+
+## Reason
+
+I think we don't need a library that deals with high data in a low-level language.
+
+Task control can be solved by creating a so file in python and computation by rust.
+
+Especially after tasting the flexibility of python, out of Rust's strictness,
+
+I didn't even want to be strict with the job control.
+
+***
+***
+***
+
 # mainforce-machine-learning-crate
 # Background created
 
